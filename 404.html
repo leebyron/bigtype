@@ -48,6 +48,7 @@
       <div id="text"></div>
     </div>
     <script>
+      var MINIMUM_SIZE = 10;
       var wrap = document.getElementById('wrap');
       var text = document.getElementById('text');
       document.title = text.innerText = decodeURIComponent(window.location.pathname.slice(1).replace('+', ' ')).replace(/</g, '&gt;') || 'Big Type';
@@ -85,8 +86,8 @@
         if (isTooBig(high)) {
           do {
             high = low;
-            low = Math.floor(high / 2);
-          } while (isTooBig(low));
+            low = Math.max(MINIMUM_SIZE, Math.floor(high / 2));
+          } while (low > MINIMUM_SIZE && isTooBig(low));
         } else {
           do {
             low = high;
