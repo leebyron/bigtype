@@ -71,6 +71,7 @@
       } else {
         text.contentEditable = true;
         text.onkeyup = updateText;
+        text.onpaste = updateText;
         var s = window.getSelection();
         s.removeAllRanges();
         var r = document.createRange();
@@ -81,6 +82,8 @@
 
       function updateText() {
         var content = text.innerText;
+        // Remove any pasted or typed styles.
+        text.innerText = content;
         findPerfectSize();
         window.history.replaceState(
           {},
