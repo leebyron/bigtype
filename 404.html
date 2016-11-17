@@ -9,19 +9,22 @@
         overflow: hidden;
       }
 
-      #wrap {
-        align-items: center;
-        background-color: black;
-        color: white;
+      body.show {
         cursor: pointer;
-        display: flex;
-        height: 100%;
-        justify-content: center;
-        position: fixed;
         -ms-user-select: none;
         -moz-user-select: none;
         -webkit-user-select: none;
         user-select: none;
+      }
+
+      #wrap {
+        align-items: center;
+        background-color: black;
+        color: white;
+        display: flex;
+        height: 100%;
+        justify-content: center;
+        position: fixed;
         width: 100%;
       }
 
@@ -41,6 +44,10 @@
         text-align: center;
         word-wrap: break-word;
       }
+
+      #text:focus {
+        outline: none;
+      }
     </style>
   </head>
   <body>
@@ -51,12 +58,39 @@
       var MINIMUM_SIZE = 10;
       var wrap = document.getElementById('wrap');
       var text = document.getElementById('text');
-      document.title = text.innerText = decodeURIComponent(window.location.pathname.slice(1).replace('+', ' ')).replace(/</g, '&gt;') || 'Big Type';
+      var content = decodeURIComponent(window.location.pathname.slice(1).replace('+', ' ')).replace(/</g, '&gt;');
 
-      findPerfectSize();
+      if (content) {
+        document.body.className = 'show';
+        document.title = text.innerText = content;
+        findPerfectSize();
+        document.onclick = makeBlink;
+      } else {
+        text.innerText = document.title;
+        text.contentEditable = true;
+        text.onkeyup = updateText;
+        var s = window.getSelection();
+        s.removeAllRanges();
+        var r = document.createRange();
+        r.selectNodeContents(text);
+        s.addRange(r);
+        document.onclick = focusText;
+      }
 
       window.onresize = findPerfectSize;
-      document.onclick = makeBlink;
+
+      function updateText() {
+        var content = text.innerText;
+        window.history.replaceState(
+          {},
+          content.replace(/</g, '&gt;'),
+          encodeURIComponent(text.innerText)
+        );
+      }
+
+      function focusText() {
+        text.focus();
+      }
 
       var isBlinking;
       function makeBlink() {
@@ -70,6 +104,10 @@
       }
 
       function findPerfectSize() {
+        if (!text.innerText) {
+          return;
+        }
+
         // Determine target size.
         var maxW = wrap.offsetWidth;
         var maxH = wrap.offsetHeight;
