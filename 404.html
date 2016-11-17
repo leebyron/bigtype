@@ -81,6 +81,7 @@
 
       function updateText() {
         var content = text.innerText;
+        findPerfectSize();
         window.history.replaceState(
           {},
           content.replace(/</g, '&gt;'),
