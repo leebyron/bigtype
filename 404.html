@@ -59,7 +59,7 @@
         var MINIMUM_SIZE = 10;
         var wrap = document.getElementById('wrap');
         var text = document.getElementById('text');
-        var content = decodeURIComponent(window.location.pathname.slice(1).replace('+', ' ')).replace(/</g, '&gt;');
+        var content = decodeURIComponent(window.location.pathname.slice(1).replace(/\+/g, ' ')).replace(/</g, '&gt;');
 
         text.innerText = document.title = content || 'Big Type';
         findPerfectSize();
