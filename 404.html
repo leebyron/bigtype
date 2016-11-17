@@ -55,103 +55,105 @@
       <div id="text"></div>
     </div>
     <script>
-      var MINIMUM_SIZE = 10;
-      var wrap = document.getElementById('wrap');
-      var text = document.getElementById('text');
-      var content = decodeURIComponent(window.location.pathname.slice(1).replace('+', ' ')).replace(/</g, '&gt;');
+      (function(){
+        var MINIMUM_SIZE = 10;
+        var wrap = document.getElementById('wrap');
+        var text = document.getElementById('text');
+        var content = decodeURIComponent(window.location.pathname.slice(1).replace('+', ' ')).replace(/</g, '&gt;');
 
-      text.innerText = document.title = content || 'Big Type';
-      findPerfectSize();
-      window.onresize = findPerfectSize;
-
-      // Show or edit.
-      if (content) {
-        document.body.className = 'show';
-        document.onclick = makeBlink;
-      } else {
-        text.contentEditable = true;
-        text.onkeyup = updateText;
-        text.onpaste = updateText;
-        var s = window.getSelection();
-        s.removeAllRanges();
-        var r = document.createRange();
-        r.selectNodeContents(text);
-        s.addRange(r);
-        document.onclick = focusText;
-      }
-
-      function updateText() {
-        var content = text.innerText;
-        // Remove any pasted or typed styles.
-        text.innerText = content;
+        text.innerText = document.title = content || 'Big Type';
         findPerfectSize();
-        window.history.replaceState(
-          {},
-          content.replace(/</g, '&gt;'),
-          encodeURIComponent(text.innerText)
-        );
-      }
+        window.onresize = findPerfectSize;
 
-      function focusText() {
-        text.focus();
-      }
-
-      var isBlinking;
-      function makeBlink() {
-        isBlinking = isBlinking ?
-          clearInterval(isBlinking) :
-          setInterval(toggleBlink, 180);
-      }
-
-      function toggleBlink() {
-        wrap.className = wrap.className ? '' : 'blink';
-      }
-
-      function findPerfectSize() {
-        if (!text.innerText) {
-          return;
-        }
-
-        // Determine target size.
-        var maxW = wrap.offsetWidth;
-        var maxH = wrap.offsetHeight;
-
-        // Predicate for bisection search.
-        function isTooBig(size) {
-          text.style.fontSize = size + 'px';
-          return text.offsetWidth > maxW || text.offsetHeight > maxH;
-        }
-
-        // Determine initial bounds.
-        var high, low;
-        high = low = parseInt(window.getComputedStyle(text).fontSize, 10) || 100;
-        if (isTooBig(high)) {
-          do {
-            high = low;
-            low = Math.max(MINIMUM_SIZE, Math.floor(high / 2));
-          } while (low > MINIMUM_SIZE && isTooBig(low));
+        // Show or edit.
+        if (content) {
+          document.body.className = 'show';
+          document.onclick = makeBlink;
         } else {
-          do {
-            low = high;
-            high = low * 2;
-          } while (!isTooBig(high));
+          text.contentEditable = true;
+          text.onkeyup = updateText;
+          text.onpaste = updateText;
+          var s = window.getSelection();
+          s.removeAllRanges();
+          var r = document.createRange();
+          r.selectNodeContents(text);
+          s.addRange(r);
+          document.onclick = focusText;
         }
 
-        // Bisect to find largest size that isn't too big (or timeout).
-        var runs = 0;
-        while (high - low > 1 && runs < 20) {
-          var mid = Math.floor((high + low) / 2);
-          if (isTooBig(mid)) {
-            high = mid;
-          } else {
-            low = mid;
+        function updateText() {
+          var content = text.innerText;
+          // Remove any pasted or typed styles.
+          text.innerText = content;
+          findPerfectSize();
+          window.history.replaceState(
+            {},
+            content.replace(/</g, '&gt;'),
+            encodeURIComponent(text.innerText)
+          );
+        }
+
+        function focusText() {
+          text.focus();
+        }
+
+        var isBlinking;
+        function makeBlink() {
+          isBlinking = isBlinking ?
+            clearInterval(isBlinking) :
+            setInterval(toggleBlink, 180);
+        }
+
+        function toggleBlink() {
+          wrap.className = wrap.className ? '' : 'blink';
+        }
+
+        function findPerfectSize() {
+          if (!text.innerText) {
+            return;
           }
-          runs++;
-        }
 
-        // Update text font size.
-        text.style.fontSize = low + 'px';
-      }
+          // Determine target size.
+          var maxW = wrap.offsetWidth;
+          var maxH = wrap.offsetHeight;
+
+          // Predicate for bisection search.
+          function isTooBig(size) {
+            text.style.fontSize = size + 'px';
+            return text.offsetWidth > maxW || text.offsetHeight > maxH;
+          }
+
+          // Determine initial bounds.
+          var high, low;
+          high = low = parseInt(window.getComputedStyle(text).fontSize, 10) || 100;
+          if (isTooBig(high)) {
+            do {
+              high = low;
+              low = Math.max(MINIMUM_SIZE, Math.floor(high / 2));
+            } while (low > MINIMUM_SIZE && isTooBig(low));
+          } else {
+            do {
+              low = high;
+              high = low * 2;
+            } while (!isTooBig(high));
+          }
+
+          // Bisect to find largest size that isn't too big (or timeout).
+          var runs = 0;
+          while (high - low > 1 && runs < 20) {
+            var mid = Math.floor((high + low) / 2);
+            if (isTooBig(mid)) {
+              high = mid;
+            } else {
+              low = mid;
+            }
+            runs++;
+          }
+
+          // Update text font size.
+          text.style.fontSize = low + 'px';
+        }
+      })();
     </script>
     <script>
       (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
