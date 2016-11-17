@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Big Type</title>
+    <style>
+      body {
+        margin: 0;
+        padding: 0;
+        overflow: hidden;
+      }
+
+      #wrap {
+        align-items: center;
+        background-color: black;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        height: 100%;
+        justify-content: center;
+        position: fixed;
+        -ms-user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+        width: 100%;
+      }
+
+      #wrap.blink {
+        background-color: white;
+        color: black;
+      }
+
+      #text {
+        font-family:
+          -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+          "Fira Sans", "Droid Sans", "Helvetica Neue",
+          sans-serif;
+        line-height: 0.92;
+        padding: 8vmax;
+        text-align: center;
+        word-wrap: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="wrap">
+      <div id="text"></div>
+    </div>
+    <script>
+      var wrap = document.getElementById('wrap');
+      var text = document.getElementById('text');
+      text.innerText = decodeURIComponent(window.location.pathname.slice(1).replace('+', ' ')).replace(/</g, '&gt;');
+
+      findPerfectSize();
+
+      window.onresize = findPerfectSize;
+      document.onclick = makeBlink;
+
+      var isBlinking;
+      function makeBlink() {
+        isBlinking = isBlinking ?
+          clearInterval(isBlinking) :
+          setInterval(toggleBlink, 180);
+      }
+
+      function toggleBlink() {
+        wrap.className = wrap.className ? '' : 'blink';
+      }
+
+      function findPerfectSize() {
+        // Determine target size.
+        var maxW = wrap.offsetWidth;
+        var maxH = wrap.offsetHeight;
+
+        // Predicate for bisection search.
+        function isTooBig(size) {
+          text.style.fontSize = size + 'px';
+          return text.offsetWidth > maxW || text.offsetHeight > maxH;
+        }
+
+        // Determine initial bounds.
+        var high, low;
+        high = low = parseInt(window.getComputedStyle(text).fontSize, 10) || 100;
+        if (isTooBig(high)) {
+          do {
+            high = low;
+            low = Math.floor(high / 2);
+          } while (isTooBig(low));
+        } else {
+          do {
+            low = high;
+            high = low * 2;
+          } while (!isTooBig(high));
+        }
+
+        // Bisect to find largest size that isn't too big (or timeout).
+        var runs = 0;
+        while (high - low > 1 && runs < 20) {
+          var mid = Math.floor((high + low) / 2);
+          if (isTooBig(mid)) {
+            high = mid;
+          } else {
+            low = mid;
+          }
+          runs++;
+        }
+
+        // Update text font size.
+        text.style.fontSize = low + 'px';
+      }
+    </script>
+  </body>
+</html>
