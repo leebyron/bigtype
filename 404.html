@@ -60,13 +60,15 @@
       var text = document.getElementById('text');
       var content = decodeURIComponent(window.location.pathname.slice(1).replace('+', ' ')).replace(/</g, '&gt;');
 
+      text.innerText = document.title = content || 'Big Type';
+      findPerfectSize();
+      window.onresize = findPerfectSize;
+
+      // Show or edit.
       if (content) {
         document.body.className = 'show';
-        document.title = text.innerText = content;
-        findPerfectSize();
         document.onclick = makeBlink;
       } else {
-        text.innerText = document.title;
         text.contentEditable = true;
         text.onkeyup = updateText;
         var s = window.getSelection();
@@ -76,8 +78,6 @@
         s.addRange(r);
         document.onclick = focusText;
       }
-
-      window.onresize = findPerfectSize;
 
       function updateText() {
         var content = text.innerText;
