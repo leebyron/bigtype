@@ -56,7 +56,15 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         line-height: 0.92;
         padding: 8vmax;
         text-align: center;
+        -ms-word-break: break-all;
+        word-break: break-all;
+        word-break: break-word;
         word-wrap: break-word;
+        overflow-wrap: break-word;
+        -webkit-hyphens: auto;
+        -moz-hyphens: auto;
+        -ms-hyphens: auto;
+        hyphens: auto;
       }
 
       #text:focus {
@@ -100,38 +108,58 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           var s = window.getSelection();
           s.removeAllRanges();
           var r = document.createRange();
-          r.selectNodeContents(text);
+          r.selectNodeContents(text.childNodes[0]);
           s.addRange(r);
 
           document.onclick = focusText;
 
-          // create an observer instance
+          // Listen for text changes.
           var observer = new MutationObserver(updateText);
           observer.observe(text, { characterData: true, childList: true, subtree: true });
         }
 
         function updateText() {
           var newContent = text.innerText.replace(/\u00A0/g, ' ').replace(/\n/g, '');
-          if (newContent === content) {
-            return;
-          }
 
           // Remove any pasted or typed styles.
           if (text.childNodes.length > 1 || newContent.length > MAXIMUM_LENGTH) {
             var range = window.getSelection().getRangeAt(0);
+            var start = getGlobalOffset(range.startContainer, range.startOffset);
+            var end = getGlobalOffset(range.endContainer, range.endOffset);
+            range.detach();
             newContent = newContent.slice(0, MAXIMUM_LENGTH);
             text.innerText = newContent;
+            range = document.createRange();
+            var textNode = text.childNodes[0];
+            range.setStart(textNode, start);
+            range.setEnd(textNode, end);
+            window.getSelection().removeAllRanges();
             window.getSelection().addRange(range);
           }
 
-          content = newContent;
+          // Update content if necessary.
+          if (newContent !== content) {
+            content = newContent;
 
-          // Resize to fit.
-          findPerfectSize();
+            // Resize to fit.
+            findPerfectSize();
 
-          // Update Title & URL.
-          document.title = content.replace(/</g, '&gt;');
-          window.history.replaceState({}, null, encodeURIComponent(content.trim()) || '/');
+            // Update Title & URL.
+            document.title = content.replace(/</g, '&gt;');
+            window.history.replaceState({}, null, encodeURIComponent(content.trim()) || '/');
+          }
+        }
+
+        function getGlobalOffset(node, offset) {
+          while (node !== text) {
+            var parent = node.parentNode;
+            var children = parent.childNodes;
+            for (var i = 0; i < children.length && children[i] !== node; i++) {
+              offset += children[i].textContent.length;
+            }
+            node = parent;
+          }
+          return offset;
         }
 
         function focusText() {
