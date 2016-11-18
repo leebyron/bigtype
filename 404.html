@@ -154,10 +154,24 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           return offset;
         }
 
-        function focusText() {
-          text.focus();
+        // Disable scrolling when not focused
+        var isFocused = false;
+
+        text.onfocus = function() {
+          isFocused = true;
+        };
+
+        text.onblur = function() {
+          isFocused = false;
+        };
+
+        document.ontouchmove = function (event) {
+          if (!isFocused) {
+            event.preventDefault();
+          }
         }
 
+        // Shake to flash
         var SHAKE_FORCE = 13; // ~1.5G
         window.addEventListener('devicemotion', ev => {
           var f = ev.acceleration || ev.accelerationIncludingGravity;
@@ -178,6 +192,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           }
         }
 
+        // Resize text to maximize space
         function findPerfectSize() {
           if (!text.innerText) {
             return;
