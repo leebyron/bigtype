@@ -164,6 +164,15 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           text.focus();
         }
 
+        var SHAKE_FORCE = 13; // ~1.5G
+        window.addEventListener('devicemotion', ev => {
+          // console.log(ev);
+          var f = ev.acceleration || ev.accelerationIncludingGravity;
+          if (f.x * f.x + f.y * f.y + f.z * f.z > SHAKE_FORCE * SHAKE_FORCE) {
+            makeBlink();
+          }
+        });
+
         var isBlinking;
         function makeBlink() {
           if (isBlinking) {
