@@ -285,7 +285,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         var lastShake = 0;
 
         window.addEventListener('devicemotion', ev => {
-          if (Date.now() - lastShake < 1000) {
+          if (isFocused || Date.now() - lastShake < 1000) {
             return;
           }
           var f = ev.acceleration || ev.accelerationIncludingGravity;
@@ -296,6 +296,10 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
               isBlinking = clearInterval(isBlinking);
             } else {
               isBlinking = setInterval(function () {
+                if (isFocused) {
+                  document.body.className = '';
+                  isBlinking = clearInterval(isBlinking);
+                }
                 document.body.className = document.body.className ? '' : 'blink';
               }, 180);
             }
