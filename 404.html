@@ -16,7 +16,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 <html>
   <head>
     <title>Big Type</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="HandheldFriendly" content="true" />
     <meta property="og:title" content="A BigType message" />
@@ -24,6 +24,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
     <meta name="twitter:card" content="summary" />
     <style>
       body {
+        position: fixed;
         margin: 0;
         padding: 0;
         overflow: hidden;
@@ -86,6 +87,8 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
         var wrap = document.getElementById('wrap');
         var text = document.getElementById('text');
+
+        // Get initial content.
         var content = decodeURIComponent(window.location.pathname.slice(1).replace(/\+/g, ' ')).replace(/</g, '&gt;').slice(0, MAXIMUM_LENGTH);
 
         // Highlight all text if no initial content.
