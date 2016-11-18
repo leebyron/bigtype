@@ -79,6 +79,28 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         color: green;
         font-family: monospace;
       }
+
+      #wrap.style3 {
+        /* hat-tip to @mdo */
+        background: #0d86b3;
+        background: -moz-linear-gradient(top, #0d86b3 0%, #11a9e2 100%);
+        background: -webkit-linear-gradient(top, #0d86b3 0%,#11a9e2 100%);
+        background: linear-gradient(to bottom, #0d86b3 0%,#11a9e2 100%);
+        font-family: georgia;
+        font-weight: bold;
+        text-shadow: 0 1px 0 #ccc,
+          0 2px 0 #c9c9c9,
+          0 3px 0 #bbb,
+          0 4px 0 #b9b9b9,
+          0 5px 0 #aaa,
+          0 6px 1px rgba(0,0,0,.1),
+          0 0 5px rgba(0,0,0,.1),
+          0 1px 3px rgba(0,0,0,.3),
+          0 3px 5px rgba(0,0,0,.2),
+          0 5px 10px rgba(0,0,0,.25),
+          0 10px 10px rgba(0,0,0,.2),
+          0 20px 20px rgba(0,0,0,.15);
+      }
     </style>
   </head>
   <body>
@@ -98,7 +120,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
         var MAXIMUM_LENGTH = 2000;
         var MINIMUM_SIZE = 10;
-        var STYLES = 3;
+        var STYLES = 4;
 
         var wrap = document.getElementById('wrap');
         var text = document.getElementById('text');
@@ -133,7 +155,6 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             );
           }
         }
-
 
         //
         // Live text editing
@@ -196,7 +217,6 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           }
           return offset;
         }
-
 
         //
         // Resizing text to fill screen
