@@ -50,9 +50,8 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         line-height: 0.92;
       }
 
-      #wrap.blink {
-        background-color: white;
-        color: black;
+      .blink #wrap {
+        filter: invert(100%);
       }
 
       #text {
@@ -104,6 +103,10 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         var wrap = document.getElementById('wrap');
         var text = document.getElementById('text');
 
+        //
+        // App state
+        //
+
         // Get initial content & style.
         var content =
           (window.navigator.standalone ?
@@ -117,26 +120,6 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             window.location.search.slice(1),
           10) || 0;
 
-        // Set document to current style.
-        wrap.className = 'style' + style;
-
-        // Highlight all text if no initial content.
-        if (content) {
-          text.innerText = document.title = content;
-        } else if (!('ontouchstart' in window)) {
-          var s = window.getSelection();
-          s.removeAllRanges();
-          var r = document.createRange();
-          r.selectNodeContents(text.childNodes[0]);
-          s.addRange(r);
-        }
-
-        // Optimize size.
-        findPerfectSize(wrap, text);
-        window.onresize = function () {
-          findPerfectSize(wrap, text);
-        };
-
         // Called when URL / Storage should update.
         function updateURL() {
           // Update Title & URL.
@@ -149,6 +132,22 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
               '/' + (encodeURIComponent(content.trim())) + (style ? '?' + style : '')
             );
           }
+        }
+
+
+        //
+        // Live text editing
+        //
+
+        // Highlight all text if no initial content.
+        if (content) {
+          text.innerText = document.title = content;
+        } else if (!('ontouchstart' in window)) {
+          var s = window.getSelection();
+          s.removeAllRanges();
+          var r = document.createRange();
+          r.selectNodeContents(text.childNodes[0]);
+          s.addRange(r);
         }
 
         // Listen for text changes.
@@ -198,26 +197,15 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           return offset;
         }
 
-        // Shake to flash
-        var SHAKE_FORCE = 13; // ~1.5G
-        window.addEventListener('devicemotion', ev => {
-          var f = ev.acceleration || ev.accelerationIncludingGravity;
-          if (f.x * f.x + f.y * f.y + f.z * f.z > SHAKE_FORCE * SHAKE_FORCE) {
-            makeBlink();
-          }
-        });
 
-        var isBlinking;
-        function makeBlink() {
-          if (isBlinking) {
-            wrap.className = '';
-            isBlinking = clearInterval(isBlinking);
-          } else {
-            isBlinking = setInterval(function () {
-              wrap.className = wrap.className ? '' : 'blink';
-            }, 180);
-          }
-        }
+        //
+        // Resizing text to fill screen
+        //
+
+        findPerfectSize(wrap, text);
+        window.onresize = function () {
+          findPerfectSize(wrap, text);
+        };
 
         // Resize text to maximize space
         function findPerfectSize(wrap, text) {
@@ -265,6 +253,38 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           // Update text font size.
           text.style.fontSize = low + 'px';
         }
+
+        //
+        // Shake for flashes
+        //
+
+        // Shake to flash
+        var SHAKE_FORCE = 11; // ~1.3G
+        window.addEventListener('devicemotion', ev => {
+          var f = ev.acceleration || ev.accelerationIncludingGravity;
+          if (f.x * f.x + f.y * f.y + f.z * f.z > SHAKE_FORCE * SHAKE_FORCE) {
+            makeBlink();
+          }
+        });
+
+        var isBlinking;
+        function makeBlink() {
+          if (isBlinking) {
+            document.body.className = '';
+            isBlinking = clearInterval(isBlinking);
+          } else {
+            isBlinking = setInterval(function () {
+              document.body.className = document.body.className ? '' : 'blink';
+            }, 180);
+          }
+        }
+
+        //
+        // Swipe for styles
+        //
+
+        // Set document to current style.
+        wrap.className = 'style' + style;
 
         // Style swiping & disable scrolling when not focused.
         var isFocused = false;
