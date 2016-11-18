@@ -187,32 +187,26 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           var maxW = wrap.offsetWidth;
           var maxH = wrap.offsetHeight;
 
-          // Predicate for bisection search.
-          function isTooBig(size) {
-            text.style.fontSize = size + 'px';
-            return text.offsetWidth > maxW || text.offsetHeight > maxH;
-          }
-
           // Determine initial bounds.
           var high, low;
           high = low = parseInt(window.getComputedStyle(text).fontSize, 10) || 100;
-          if (isTooBig(high)) {
+          if (isTooBig(high, maxW, maxH)) {
             do {
               high = low;
               low = Math.max(MINIMUM_SIZE, Math.floor(high / 2));
-            } while (low > MINIMUM_SIZE && isTooBig(low));
+            } while (low > MINIMUM_SIZE && isTooBig(low, maxW, maxH));
           } else {
             do {
               low = high;
               high = low * 2;
-            } while (!isTooBig(high));
+            } while (!isTooBig(high, maxW, maxH));
           }
 
           // Bisect to find largest size that isn't too big (or timeout).
           var runs = 0;
           while (high - low > 1 && runs < 20) {
             var mid = Math.floor((high + low) / 2);
-            if (isTooBig(mid)) {
+            if (isTooBig(mid, maxW, maxH)) {
               high = mid;
             } else {
               low = mid;
@@ -222,6 +216,12 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
           // Update text font size.
           text.style.fontSize = low + 'px';
+        }
+
+        // Predicate for bisection search.
+        function isTooBig(size, maxW, maxH) {
+          text.style.fontSize = size + 'px';
+          return text.offsetWidth > maxW || text.offsetHeight > maxH;
         }
       })();
     </script>
