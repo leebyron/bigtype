@@ -131,10 +131,11 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           (window.navigator.standalone ?
             localStorage.getItem('content') || '' :
             decodeURIComponent(window.location.pathname.slice(1).replace(/\+/g, ' ')))
+          .trim()
           .slice(0, MAXIMUM_LENGTH);
 
         if (content) {
-          text.innerText = document.title = content;
+          text.textContent = document.title = content;
         }
 
         var style = parseInt(
@@ -174,12 +175,13 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         }
 
         // Listen for text changes.
-        text.oninput = updateText;
         var observer = new MutationObserver(updateText);
         observer.observe(text, { characterData: true, childList: true, subtree: true });
 
-        function updateText() {
-          var newContent = text.innerText.replace(/\u00A0/g, ' ').replace(/\n/g, '');
+        function updateText(mutations) {
+          var newContent = text.textContent
+            .replace(/\u00A0/g, ' ')
+            .replace(/\n/g, '');
 
           // Remove any pasted or typed styles.
           if (text.childNodes.length > 1 || newContent.length > MAXIMUM_LENGTH) {
@@ -188,7 +190,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             var end = getGlobalOffset(range.endContainer, range.endOffset);
             range.detach();
             newContent = newContent.slice(0, MAXIMUM_LENGTH);
-            text.innerText = newContent;
+            text.textContent = newContent;
             range = document.createRange();
             var textNode = text.childNodes[0];
             range.setStart(textNode, start);
@@ -231,7 +233,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
         // Resize text to maximize space
         function findPerfectSize(wrap, text) {
-          if (!text.innerText) {
+          if (!text.textContent) {
             return;
           }
 
