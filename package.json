@@ -1,0 +1,18 @@
+{
+  "name": "bigtype",
+  "homepage": "http://bigty.pe/",
+  "description": "Say big things",
+  "author": "Lee Byron <lee@leebyron.com> (http://leebyron.com/)",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node -e \"console.log('http://localhost:' + require('http').createServer((req, res) => require('fs').createReadStream(__dirname + '/404.html').pipe(res)).listen().address().port);\""
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/leebyron/bigtype.git"
+  },
+  "bugs": {
+    "url": "https://github.com/leebyron/bigtype/issues"
+  }
+}
