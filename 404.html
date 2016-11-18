@@ -94,7 +94,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         // Highlight all text if no initial content.
         if (content) {
           text.innerText = document.title = content;
-        } else if (!document.ontouchstart) {
+        } else if (!('ontouchstart' in window)) {
           var s = window.getSelection();
           s.removeAllRanges();
           var r = document.createRange();
