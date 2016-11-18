@@ -292,15 +292,16 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           if (f.x * f.x + f.y * f.y + f.z * f.z > SHAKE_FORCE * SHAKE_FORCE) {
             lastShake = Date.now();
             if (isBlinking) {
-              document.body.className = '';
               isBlinking = clearInterval(isBlinking);
+              document.body.className = '';
             } else {
               isBlinking = setInterval(function () {
                 if (isFocused) {
-                  document.body.className = '';
                   isBlinking = clearInterval(isBlinking);
+                  document.body.className = '';
+                } else {
+                  document.body.className = document.body.className ? '' : 'blink';
                 }
-                document.body.className = document.body.className ? '' : 'blink';
               }, 180);
             }
           }
