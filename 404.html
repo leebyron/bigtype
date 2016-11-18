@@ -79,10 +79,12 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           '╚═════╝ ╚═╝ ╚═════╝   ╚═╝      ╚═╝   ╚═╝     ╚══════╝\n'
         );
 
+        var MAXIMUM_LENGTH = 2000;
         var MINIMUM_SIZE = 10;
+
         var wrap = document.getElementById('wrap');
         var text = document.getElementById('text');
-        var content = decodeURIComponent(window.location.pathname.slice(1).replace(/\+/g, ' ')).replace(/</g, '&gt;');
+        var content = decodeURIComponent(window.location.pathname.slice(1).replace(/\+/g, ' ')).replace(/</g, '&gt;').slice(0, MAXIMUM_LENGTH);
 
         text.innerText = document.title = content || 'Big Type';
         findPerfectSize();
@@ -94,23 +96,35 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           document.onclick = makeBlink;
         } else {
           text.contentEditable = true;
-          text.onkeydown = updateText;
-          text.onpaste = updateText;
+
           var s = window.getSelection();
           s.removeAllRanges();
           var r = document.createRange();
           r.selectNodeContents(text);
           s.addRange(r);
+
           document.onclick = focusText;
+
+          // create an observer instance
+          var observer = new MutationObserver(updateText);
+          observer.observe(text, { characterData: true, childList: true, subtree: true });
         }
 
         function updateText() {
-          var content = text.innerText;
+          var newContent = text.innerText;
+          if (newContent === content) {
+            return;
+          }
 
           // Remove any pasted or typed styles.
-          var range = window.getSelection().getRangeAt(0);
-          text.innerText = content;
-          window.getSelection().addRange(range);
+          if (text.childNodes.length > 1 || newContent.length > MAXIMUM_LENGTH) {
+            var range = window.getSelection().getRangeAt(0);
+            newContent = newContent.slice(0, MAXIMUM_LENGTH);
+            text.innerText = newContent;
+            window.getSelection().addRange(range);
+          }
+
+          content = newContent;
 
           // Resize to fit.
           findPerfectSize();
@@ -119,7 +133,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           window.history.replaceState(
             {},
             content.replace(/</g, '&gt;'),
-            encodeURIComponent(text.innerText)
+            encodeURIComponent(content)
           );
         }
 
