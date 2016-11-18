@@ -111,7 +111,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         }
 
         function updateText() {
-          var newContent = text.innerText;
+          var newContent = text.innerText.replace(/\u00A0/g, ' ').replace(/\n/g, '');
           if (newContent === content) {
             return;
           }
@@ -131,7 +131,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
           // Update Title & URL.
           document.title = content.replace(/</g, '&gt;');
-          window.history.replaceState({}, null, encodeURIComponent(content) || '/');
+          window.history.replaceState({}, null, encodeURIComponent(content.trim()) || '/');
         }
 
         function focusText() {
