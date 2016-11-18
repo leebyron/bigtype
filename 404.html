@@ -279,25 +279,28 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         //
 
         // Shake to flash
-        var SHAKE_FORCE = 11; // ~1.3G
-        window.addEventListener('devicemotion', ev => {
-          var f = ev.acceleration || ev.accelerationIncludingGravity;
-          if (f.x * f.x + f.y * f.y + f.z * f.z > SHAKE_FORCE * SHAKE_FORCE) {
-            makeBlink();
-          }
-        });
+        var SHAKE_FORCE = 12; // ~1.3G
 
         var isBlinking;
-        function makeBlink() {
-          if (isBlinking) {
-            document.body.className = '';
-            isBlinking = clearInterval(isBlinking);
-          } else {
-            isBlinking = setInterval(function () {
-              document.body.className = document.body.className ? '' : 'blink';
-            }, 180);
+        var lastShake = 0;
+
+        window.addEventListener('devicemotion', ev => {
+          if (Date.now() - lastShake < 1000) {
+            return;
           }
-        }
+          var f = ev.acceleration || ev.accelerationIncludingGravity;
+          if (f.x * f.x + f.y * f.y + f.z * f.z > SHAKE_FORCE * SHAKE_FORCE) {
+            lastShake = Date.now();
+            if (isBlinking) {
+              document.body.className = '';
+              isBlinking = clearInterval(isBlinking);
+            } else {
+              isBlinking = setInterval(function () {
+                document.body.className = document.body.className ? '' : 'blink';
+              }, 180);
+            }
+          }
+        });
 
         //
         // Swipe for styles
