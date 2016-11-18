@@ -325,6 +325,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         // Style swiping & disable scrolling when not focused.
         var isFocused = false;
         var startX, prevX;
+        var swipeTouch;
         var stylePreview;
         var swipeDirection;
         var swipeSize;
@@ -358,19 +359,22 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
         text.onblur = function() {
           isFocused = false;
+          startX = null;
         };
 
         document.ontouchstart = function (event) {
-          if (stylePreview) {
+          if (startX) {
             return;
           }
+          swipeTouch = event.touches[0].identifier;
           startX = event.touches[0].pageX;
           queue = [];
           updatePos(startX);
         }
 
         document.ontouchmove = function (event) {
-          if (isFocused || startX == null) {
+          if (isFocused || startX == null ||
+              swipeTouch !== event.changedTouches[0].identifier) {
             return;
           }
           event.preventDefault();
@@ -396,16 +400,19 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         }
 
         document.ontouchcancel = function () {
-          if (!stylePreview) {
-            return;
-          }
-          document.body.removeChild(stylePreview);
-          stylePreview = null;
           startX = null;
+          if (stylePreview) {
+            document.body.removeChild(stylePreview);
+            stylePreview = null;
+          }
         }
 
         document.ontouchend = function (event) {
+          if (swipeTouch !== event.changedTouches[0].identifier) {
+            return;
+          }
           if (!stylePreview) {
+            startX = null;
             return;
           }
           var x = event.changedTouches[0].pageX;
