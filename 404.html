@@ -129,12 +129,9 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           // Resize to fit.
           findPerfectSize();
 
-          // Update URL & Title.
-          window.history.replaceState(
-            {},
-            content.replace(/</g, '&gt;'),
-            encodeURIComponent(content)
-          );
+          // Update Title & URL.
+          document.title = content.replace(/</g, '&gt;');
+          window.history.replaceState({}, null, encodeURIComponent(content) || '/');
         }
 
         function focusText() {
