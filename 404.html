@@ -57,7 +57,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           "Fira Sans", "Droid Sans", "Helvetica Neue",
           sans-serif;
         line-height: 0.92;
-        padding: 8vmax;
+        padding: 6vmax;
         text-align: center;
         -webkit-hyphens: auto;
         -moz-hyphens: auto;
@@ -166,7 +166,6 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
         var SHAKE_FORCE = 13; // ~1.5G
         window.addEventListener('devicemotion', ev => {
-          // console.log(ev);
           var f = ev.acceleration || ev.accelerationIncludingGravity;
           if (f.x * f.x + f.y * f.y + f.z * f.z > SHAKE_FORCE * SHAKE_FORCE) {
             makeBlink();
