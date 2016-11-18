@@ -13,4 +13,4 @@ Check out this repo and play around! Run `npm start` to test it locally, and run
 
 ## Where did this come from?
 
-Built during a hackathon by [@leebyron](https://github.com/leebyron) and [@dschafer](https://github.com/dschafer) inspired by one of our favorite iOS apps, [Make It Big](http://make-it-big.appstor.io/).
+Built during a hackathon by [@leebyron](https://github.com/leebyron), [@dschafer](https://github.com/dschafer), and [@alangenfeld](https://github.com/alangenfeld), inspired by one of our favorite iOS apps, [Make It Big](http://make-it-big.appstor.io/).
