@@ -26,7 +26,6 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
     <meta name="twitter:card" content="summary" />
     <style>
       body {
-        position: fixed;
         margin: 0;
         padding: 0;
         overflow: hidden;
@@ -38,16 +37,17 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         background-color: black;
         color: white;
         display: flex;
-        height: 100%;
-        justify-content: center;
-        position: fixed;
-        width: 100%;
         font-family:
           -apple-system, BlinkMacSystemFont,
           "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
           "Fira Sans", "Droid Sans", "Helvetica Neue",
           sans-serif;
+        height: 100%;
+        justify-content: center;
         line-height: 0.92;
+        position: fixed;
+        text-align: center;
+        width: 100%;
       }
 
       .blink #wrap {
@@ -56,11 +56,6 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
       #text {
         padding: 6vmax;
-        text-align: center;
-        -webkit-hyphens: auto;
-        -moz-hyphens: auto;
-        -ms-hyphens: auto;
-        hyphens: auto;
       }
 
       #text:focus {
@@ -68,6 +63,8 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
       }
 
       /* additional styles */
+
+      #wrap.style0 {}
 
       #wrap.style1 {
         background-color: purple;
@@ -136,11 +133,18 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             decodeURIComponent(window.location.pathname.slice(1).replace(/\+/g, ' ')))
           .slice(0, MAXIMUM_LENGTH);
 
+        if (content) {
+          text.innerText = document.title = content;
+        }
+
         var style = parseInt(
           window.navigator.standalone ?
             localStorage.getItem('style') :
             window.location.search.slice(1),
           10) || 0;
+
+        // Set document to current style.
+        wrap.className = 'style' + style;
 
         // Called when URL / Storage should update.
         function updateURL() {
@@ -161,9 +165,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         //
 
         // Highlight all text if no initial content.
-        if (content) {
-          text.innerText = document.title = content;
-        } else if (!('ontouchstart' in window)) {
+        if (!content && !('ontouchstart' in window)) {
           var s = window.getSelection();
           s.removeAllRanges();
           var r = document.createRange();
@@ -310,9 +312,6 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         //
         // Swipe for styles
         //
-
-        // Set document to current style.
-        wrap.className = 'style' + style;
 
         // Style swiping & disable scrolling when not focused.
         var isFocused = false;
