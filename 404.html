@@ -42,6 +42,12 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         justify-content: center;
         position: fixed;
         width: 100%;
+        font-family:
+          -apple-system, BlinkMacSystemFont,
+          "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
+          "Fira Sans", "Droid Sans", "Helvetica Neue",
+          sans-serif;
+        line-height: 0.92;
       }
 
       #wrap.blink {
@@ -50,12 +56,6 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
       }
 
       #text {
-        font-family:
-          -apple-system, BlinkMacSystemFont,
-          "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell,
-          "Fira Sans", "Droid Sans", "Helvetica Neue",
-          sans-serif;
-        line-height: 0.92;
         padding: 6vmax;
         text-align: center;
         -webkit-hyphens: auto;
@@ -66,6 +66,19 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
       #text:focus {
         outline: none;
+      }
+
+      /* additional styles */
+
+      #wrap.style1 {
+        background-color: purple;
+        color: pink;
+      }
+
+      #wrap.style2 {
+        background-color: #001A0A;
+        color: green;
+        font-family: monospace;
       }
     </style>
   </head>
@@ -86,17 +99,26 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
         var MAXIMUM_LENGTH = 2000;
         var MINIMUM_SIZE = 10;
+        var STYLES = 3;
 
         var wrap = document.getElementById('wrap');
         var text = document.getElementById('text');
 
-        // Get initial content.
-
+        // Get initial content & style.
         var content =
           (window.navigator.standalone ?
-            localStorage.getItem('bigtype') || '' :
+            localStorage.getItem('content') || '' :
             decodeURIComponent(window.location.pathname.slice(1).replace(/\+/g, ' ')))
           .slice(0, MAXIMUM_LENGTH);
+
+        var style = parseInt(
+          window.navigator.standalone ?
+            localStorage.getItem('style') :
+            window.location.search.slice(1),
+          10) || 0;
+
+        // Set document to current style.
+        wrap.className = 'style' + style;
 
         // Highlight all text if no initial content.
         if (content) {
@@ -110,10 +132,27 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         }
 
         // Optimize size.
-        findPerfectSize();
-        window.onresize = findPerfectSize;
+        findPerfectSize(wrap, text);
+        window.onresize = function () {
+          findPerfectSize(wrap, text);
+        };
+
+        // Called when URL / Storage should update.
+        function updateURL() {
+          // Update Title & URL.
+          if (window.navigator.standalone) {
+            localStorage.setItem('content', content);
+            localStorage.setItem('style', style);
+          } else {
+            document.title = content;
+            window.history.replaceState({}, null,
+              '/' + (encodeURIComponent(content.trim())) + (style ? '?' + style : '')
+            );
+          }
+        }
 
         // Listen for text changes.
+        text.oninput = updateText;
         var observer = new MutationObserver(updateText);
         observer.observe(text, { characterData: true, childList: true, subtree: true });
 
@@ -141,15 +180,9 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             content = newContent;
 
             // Resize to fit.
-            findPerfectSize();
+            findPerfectSize(wrap, text);
 
-            // Update Title & URL.
-            if (window.navigator.standalone) {
-              localStorage.setItem('bigtype', content);
-            } else {
-              document.title = content;
-              window.history.replaceState({}, null, encodeURIComponent(content.trim()) || '/');
-            }
+            updateURL();
           }
         }
 
@@ -163,23 +196,6 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             node = parent;
           }
           return offset;
-        }
-
-        // Disable scrolling when not focused
-        var isFocused = false;
-
-        text.onfocus = function() {
-          isFocused = true;
-        };
-
-        text.onblur = function() {
-          isFocused = false;
-        };
-
-        document.ontouchmove = function (event) {
-          if (!isFocused) {
-            event.preventDefault();
-          }
         }
 
         // Shake to flash
@@ -204,7 +220,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         }
 
         // Resize text to maximize space
-        function findPerfectSize() {
+        function findPerfectSize(wrap, text) {
           if (!text.innerText) {
             return;
           }
@@ -212,6 +228,12 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           // Determine target size.
           var maxW = wrap.offsetWidth;
           var maxH = wrap.offsetHeight;
+
+          // Predicate for bisection search.
+          function isTooBig(size, maxW, maxH) {
+            text.style.fontSize = size + 'px';
+            return text.offsetWidth > maxW || text.offsetHeight > maxH;
+          }
 
           // Determine initial bounds.
           var high, low;
@@ -244,10 +266,120 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           text.style.fontSize = low + 'px';
         }
 
-        // Predicate for bisection search.
-        function isTooBig(size, maxW, maxH) {
-          text.style.fontSize = size + 'px';
-          return text.offsetWidth > maxW || text.offsetHeight > maxH;
+        // Style swiping & disable scrolling when not focused.
+        var isFocused = false;
+        var startX, prevX;
+        var stylePreview;
+        var swipeDirection;
+        var swipeSize;
+        var swipeStyle;
+
+        var posQ = [];
+
+        function pruneOldPos() {
+          while (posQ.length && Date.now() - posQ[0][0] > 50) {
+            posQ.shift();
+          }
+        }
+
+        function updatePos(pos) {
+          posQ.push([Date.now(), pos]);
+          pruneOldPos();
+        }
+
+        function getVelocity() {
+          pruneOldPos();
+          var length = posQ.length;
+          if (length < 2) return 0;
+          var distance = posQ[length-1][1] - posQ[0][1];
+          var time = (posQ[length-1][0] - posQ[0][0]) / 1000;
+          return distance / time
+        }
+
+        text.onfocus = function() {
+          isFocused = true;
+        };
+
+        text.onblur = function() {
+          isFocused = false;
+        };
+
+        document.ontouchstart = function (event) {
+          if (stylePreview) {
+            return;
+          }
+          startX = event.touches[0].pageX;
+          queue = [];
+          updatePos(startX);
+        }
+
+        document.ontouchmove = function (event) {
+          if (isFocused || startX == null) {
+            return;
+          }
+          event.preventDefault();
+          var x = event.changedTouches[0].pageX;
+          updatePos(x);
+          var dx = x - startX;
+          // do stuff.
+          if (!stylePreview && Math.abs(dx) > 10) {
+            swipeDirection = dx > 0 ? 1 : -1;
+            swipeSize = document.documentElement.offsetWidth;
+            swipeStyle = (style - swipeDirection + STYLES) % STYLES;
+            stylePreview = wrap.cloneNode(true);
+            stylePreview.className = 'style' + swipeStyle;
+            document.body.appendChild(stylePreview);
+            findPerfectSize(stylePreview, stylePreview.children[0]);
+          }
+          if (stylePreview) {
+            stylePreview.style.clipPath = stylePreview.style.webkitClipPath =
+              swipeDirection === 1 ?
+                'inset(0 ' + Number(swipeSize * swipeDirection - dx) + 'px 0 0)' :
+                'inset(0 0 0 ' + Number(swipeSize * -swipeDirection + dx) + 'px)';
+          }
+        }
+
+        document.ontouchcancel = function () {
+          if (!stylePreview) {
+            return;
+          }
+          document.body.removeChild(stylePreview);
+          stylePreview = null;
+          startX = null;
+        }
+
+        document.ontouchend = function (event) {
+          if (!stylePreview) {
+            return;
+          }
+          var x = event.changedTouches[0].pageX;
+          updatePos(x);
+          var dx = x - startX;
+          var vx = getVelocity();
+
+          var applyNewStyle =
+            Math.abs(vx) > 100 && vx * swipeDirection > 0 ||
+            Math.abs(vx) < 30 && Math.abs(dx) > swipeSize / 2;
+
+          stylePreview.style.transition = stylePreview.style.webkitTransition = 'all 0.2s';
+          stylePreview.style.clipPath = stylePreview.style.webkitClipPath =
+            applyNewStyle ?
+              'inset(0 0 0 0)' :
+            swipeDirection === 1 ?
+              'inset(0 ' + Number(swipeSize * swipeDirection) + 'px 0 0)' :
+              'inset(0 0 0 ' + Number(swipeSize * -swipeDirection) + 'px)';
+          stylePreview.addEventListener('transitionend', function () {
+            var size = stylePreview.children[0].style.fontSize;
+            document.body.removeChild(stylePreview);
+            stylePreview = null;
+            startX = null;
+            if (applyNewStyle) {
+              style = swipeStyle;
+              wrap.className = 'style' + swipeStyle;
+              text.style.fontSize = size;
+              updateURL();
+            }
+          });
         }
       })();
     </script>
