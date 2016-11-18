@@ -140,13 +140,14 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
         var isBlinking;
         function makeBlink() {
-          isBlinking = isBlinking ?
-            clearInterval(isBlinking) :
-            setInterval(toggleBlink, 180);
-        }
-
-        function toggleBlink() {
-          wrap.className = wrap.className ? '' : 'blink';
+          if (isBlinking) {
+            wrap.className = '';
+            isBlinking = clearInterval(isBlinking);
+          } else {
+            isBlinking = setInterval(function () {
+              wrap.className = wrap.className ? '' : 'blink';
+            }, 180);
+          }
         }
 
         function findPerfectSize() {
