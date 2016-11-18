@@ -26,14 +26,6 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         -webkit-text-size-adjust: none;
       }
 
-      body.show {
-        cursor: pointer;
-        -ms-user-select: none;
-        -moz-user-select: none;
-        -webkit-user-select: none;
-        user-select: none;
-      }
-
       #wrap {
         align-items: center;
         background-color: black;
@@ -72,7 +64,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
   </head>
   <body>
     <div id="wrap">
-      <div id="text"></div>
+      <div id="text" contentEditable>Big Type</div>
     </div>
     <script>
       (function(){
@@ -92,29 +84,24 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         var text = document.getElementById('text');
         var content = decodeURIComponent(window.location.pathname.slice(1).replace(/\+/g, ' ')).replace(/</g, '&gt;').slice(0, MAXIMUM_LENGTH);
 
-        text.innerText = document.title = content || 'Big Type';
-        findPerfectSize();
-        window.onresize = findPerfectSize;
-
-        // Show or edit.
+        // Highlight all text if no initial content.
         if (content) {
-          document.body.className = 'show';
-          document.onclick = makeBlink;
+          text.innerText = document.title = content;
         } else {
-          text.contentEditable = true;
-
           var s = window.getSelection();
           s.removeAllRanges();
           var r = document.createRange();
           r.selectNodeContents(text.childNodes[0]);
           s.addRange(r);
-
-          document.onclick = focusText;
-
-          // Listen for text changes.
-          var observer = new MutationObserver(updateText);
-          observer.observe(text, { characterData: true, childList: true, subtree: true });
         }
+
+        // Optimize size.
+        findPerfectSize();
+        window.onresize = findPerfectSize;
+
+        // Listen for text changes.
+        var observer = new MutationObserver(updateText);
+        observer.observe(text, { characterData: true, childList: true, subtree: true });
 
         function updateText() {
           var newContent = text.innerText.replace(/\u00A0/g, ' ').replace(/\n/g, '');
