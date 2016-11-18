@@ -156,7 +156,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           } else {
             document.title = content;
             window.history.replaceState({}, null,
-              '/' + (encodeURIComponent(content.trim())) + (style ? '?' + style : '')
+              '/' + encodeURIComponent(content.trim()).replace(/%20/g, '+') + (style ? '?' + style : '')
             );
           }
         }
