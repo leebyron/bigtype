@@ -422,6 +422,53 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           return distance / time
         }
 
+        function createStylePreview() {
+          document.body.style.cursor = 'pointer';
+          swipeSize = document.documentElement.offsetWidth;
+          swipeStyle = (style - swipeDirection + STYLES) % STYLES;
+          stylePreview = wrap.cloneNode(true);
+          stylePreview.className = 'style' + swipeStyle;
+          document.body.appendChild(stylePreview);
+          findPerfectSize(stylePreview, stylePreview.children[0]);
+        }
+
+        function moveStylePreview(dx) {
+          stylePreview.style.clipPath = stylePreview.style.webkitClipPath =
+            swipeDirection === 1 ?
+              'inset(0 ' + Number(swipeSize * swipeDirection - dx) + 'px 0 0)' :
+              'inset(0 0 0 ' + Number(swipeSize * -swipeDirection + dx) + 'px)';
+        }
+
+        var isAnimating = false;
+        function animateStylePreview(dx, cb) {
+          if (isAnimating) {
+            return;
+          }
+          isAnimating = true;
+          setTimeout(function () {
+            stylePreview.style.transition = stylePreview.style.webkitTransition = 'all 0.2s';
+            function cbWrap() {
+              if (stylePreview) {
+                stylePreview.style.transition = stylePreview.style.webkitTransition = '';
+                stylePreview.removeEventListener('transitionend', cbWrap);
+              }
+              isAnimating = false;
+              cb && cb();
+            }
+            stylePreview.addEventListener('transitionend', cbWrap);
+            moveStylePreview(dx);
+          }, 0);
+        }
+
+        function cleanupStylePreview() {
+          document.body.style.cursor = '';
+          startX = null;
+          if (stylePreview) {
+            document.body.removeChild(stylePreview);
+            stylePreview = null;
+          }
+        }
+
         text.onfocus = function() {
           isFocused = true;
         };
@@ -436,7 +483,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             return;
           }
           swipeTouch = event.touches[0].identifier;
-          startX = event.touches[0].pageX;
+          startX = event.touches[0].clientX;
           queue = [];
           updatePos(startX);
         }
@@ -447,33 +494,21 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             return;
           }
           event.preventDefault();
-          var x = event.changedTouches[0].pageX;
+          var x = event.changedTouches[0].clientX;
           updatePos(x);
           var dx = x - startX;
           // do stuff.
           if (!stylePreview && Math.abs(dx) > 10) {
             swipeDirection = dx > 0 ? 1 : -1;
-            swipeSize = document.documentElement.offsetWidth;
-            swipeStyle = (style - swipeDirection + STYLES) % STYLES;
-            stylePreview = wrap.cloneNode(true);
-            stylePreview.className = 'style' + swipeStyle;
-            document.body.appendChild(stylePreview);
-            findPerfectSize(stylePreview, stylePreview.children[0]);
+            createStylePreview();
           }
           if (stylePreview) {
-            stylePreview.style.clipPath = stylePreview.style.webkitClipPath =
-              swipeDirection === 1 ?
-                'inset(0 ' + Number(swipeSize * swipeDirection - dx) + 'px 0 0)' :
-                'inset(0 0 0 ' + Number(swipeSize * -swipeDirection + dx) + 'px)';
+            moveStylePreview(dx);
           }
         }
 
         document.ontouchcancel = function () {
-          startX = null;
-          if (stylePreview) {
-            document.body.removeChild(stylePreview);
-            stylePreview = null;
-          }
+          cleanupStylePreview();
         }
 
         document.ontouchend = function (event) {
@@ -484,7 +519,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             startX = null;
             return;
           }
-          var x = event.changedTouches[0].pageX;
+          var x = event.changedTouches[0].clientX;
           updatePos(x);
           var dx = x - startX;
           var vx = getVelocity();
@@ -493,26 +528,54 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             Math.abs(vx) > 100 && vx * swipeDirection > 0 ||
             Math.abs(vx) < 30 && Math.abs(dx) > swipeSize / 2;
 
-          stylePreview.style.transition = stylePreview.style.webkitTransition = 'all 0.2s';
-          stylePreview.style.clipPath = stylePreview.style.webkitClipPath =
-            applyNewStyle ?
-              'inset(0 0 0 0)' :
-            swipeDirection === 1 ?
-              'inset(0 ' + Number(swipeSize * swipeDirection) + 'px 0 0)' :
-              'inset(0 0 0 ' + Number(swipeSize * -swipeDirection) + 'px)';
-          stylePreview.addEventListener('transitionend', function () {
-            var size = stylePreview.children[0].style.fontSize;
-            document.body.removeChild(stylePreview);
-            stylePreview = null;
-            startX = null;
+          animateStylePreview(applyNewStyle ? swipeDirection * swipeSize : 0, function () {
             if (applyNewStyle) {
               style = swipeStyle;
               wrap.className = 'style' + swipeStyle;
-              text.style.fontSize = size;
+              text.style.fontSize = stylePreview.children[0].style.fontSize;
               updateURL();
             }
+            cleanupStylePreview();
           });
         }
+
+        //
+        // Alternatively, mouseover edges for styles
+        //
+
+        document.onmousemove = updateHoverStylePreview;
+
+        function updateHoverStylePreview(event) {
+          var direction =
+            document.documentElement.offsetWidth * 0.95 < event.clientX ? -1 :
+            document.documentElement.offsetWidth * 0.05 > event.clientX ? 1 :
+            0;
+
+          if (direction === 0 && stylePreview) {
+            animateStylePreview(0, function () {
+              cleanupStylePreview();
+            });
+          } else if (direction !== 0 && !stylePreview) {
+            swipeDirection = direction;
+            createStylePreview();
+            moveStylePreview(0);
+            animateStylePreview(swipeSize * swipeDirection * 0.3);
+          }
+        }
+
+        document.onclick = function (event) {
+          if (stylePreview) {
+            animateStylePreview(swipeSize * swipeDirection, function () {
+              style = swipeStyle;
+              wrap.className = 'style' + swipeStyle;
+              text.style.fontSize = stylePreview.children[0].style.fontSize;
+              updateURL();
+              cleanupStylePreview();
+              updateHoverStylePreview(event);
+            });
+          }
+        }
+
       })();
     </script>
     <script>
