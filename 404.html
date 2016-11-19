@@ -48,6 +48,13 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         position: fixed;
         text-align: center;
         width: 100%;
+        -ms-word-break: break-all;
+        word-break: break-all;
+        word-break: break-word;
+        -webkit-hyphens: auto;
+        -moz-hyphens: auto;
+        -ms-hyphens: auto;
+        hyphens: auto;
       }
 
       .blink #wrap {
@@ -60,6 +67,15 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
       #text:focus {
         outline: none;
+      }
+
+      #text nobr {
+        display: inline;
+        white-space: nowrap;
+        -webkit-hyphens: none;
+        -moz-hyphens: none;
+        -ms-hyphens: none;
+        hyphens: none;
       }
 
       /* additional styles */
@@ -117,7 +133,10 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
         var MAXIMUM_LENGTH = 2000;
         var MINIMUM_SIZE = 10;
+        var MAXIMUM_NB_WORD_SIZE = 18;
         var STYLES = 4;
+
+        var WS_RX = /([\s\u2028\u2029]+)/g;
 
         var wrap = document.getElementById('wrap');
         var text = document.getElementById('text');
@@ -135,7 +154,24 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           .slice(0, MAXIMUM_LENGTH);
 
         if (content) {
-          text.textContent = document.title = content;
+          document.title = content;
+          updateView(content);
+        }
+
+        function updateView(newContent) {
+          text.innerHTML = newContent
+            .replace(/</g, '&gt;')
+            .split(WS_RX)
+            .map(function (word, i) {
+              // Do not alter spaces, emptiness, or long words.
+              if (i % 2 || !word || word.length > MAXIMUM_NB_WORD_SIZE) {
+                return word;
+              }
+              // Short words will not break onto multiple lines.
+              return '<nobr>' + word + '</nobr>';
+            })
+            .join('');
+          findPerfectSize(wrap, text);
         }
 
         var style = parseInt(
@@ -175,10 +211,9 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         }
 
         // Listen for text changes.
-        var observer = new MutationObserver(updateText);
-        observer.observe(text, { characterData: true, childList: true, subtree: true });
+        text.oninput = didEditText;
 
-        function updateText(mutations) {
+        function didEditText() {
           var rawContent = text.textContent;
           var newContent = rawContent
             .replace(/\n/g, '')
@@ -187,38 +222,46 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             .replace(/ $/, '\u2005')
             .slice(0, MAXIMUM_LENGTH);
 
-          // // Remove any pasted or typed styles.
-          if (text.childNodes.length > 1 || newContent !== rawContent) {
-            var range = window.getSelection().getRangeAt(0);
-            var start = getGlobalOffset(range.startContainer, range.startOffset);
-            var end = getGlobalOffset(range.endContainer, range.endOffset);
-            if (newContent[newContent.length - 1] === '\u2005' &&
-                start === end && end === newContent.length - 1) {
-              start = end = newContent.length;
-            }
-            text.textContent = newContent;
-            range.detach();
-            range = document.createRange();
-            var textNode = text.childNodes[0];
-            range.setStart(textNode, start);
-            range.setEnd(textNode, end);
-            window.getSelection().removeAllRanges();
-            window.getSelection().addRange(range);
-          }
-
-          // Update content if necessary.
-          if (newContent !== content) {
+          // Remove any pasted or typed styles by re-rendering content.
+          if (text.childNodes.length > 1 ||
+              newContent !== rawContent ||
+              newContent !== content) {
             content = newContent;
 
-            // Resize to fit.
-            findPerfectSize(wrap, text);
+            // Preserve cursor state.
+            var selection = window.getSelection();
+            var range;
+            if (selection.rangeCount) {
+              range = selection.getRangeAt(0);
+              var start = getGlobalOffset(text, range.startContainer, range.startOffset);
+              var end = getGlobalOffset(text, range.endContainer, range.endOffset);
+              if (content[content.length - 1] === '\u2005' &&
+                  start === end && end === content.length - 1) {
+                start = end = content.length;
+              }
+            }
+
+            // Render content.
+            updateView(content);
+
+            // Re-apply cursor state.
+            if (range) {
+              var startLocal = getLocalOffset(text, start);
+              range.setStart(startLocal[0], startLocal[1]);
+              var endLocal = getLocalOffset(text, end);
+              range.setEnd(endLocal[0], endLocal[1]);
+              selection.removeAllRanges();
+              selection.addRange(range);
+            }
 
             updateURL();
           }
         }
 
-        function getGlobalOffset(node, offset) {
-          while (node !== text) {
+        // Converts an offset local to node into an offset into the full
+        // textContent of container.
+        function getGlobalOffset(container, node, offset) {
+          while (node !== container) {
             var parent = node.parentNode;
             var children = parent.childNodes;
             for (var i = 0; i < children.length && children[i] !== node; i++) {
@@ -229,11 +272,34 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           return offset;
         }
 
+        // Converts an offset in the textContent of a container node into
+        // an offset the local offset of one of container's descendents.
+        function getLocalOffset(container, offset) {
+          var parent = container;
+          var distance = offset;
+
+          recurse: while (true) {
+            var children = parent.childNodes;
+            if (children.length === 0) {
+              return [ parent, distance ];
+            }
+            for (var i = 0; i < children.length; i++) {
+              var child = children[i];
+              var size = child.textContent.length;
+              if (size > distance) {
+                parent = child;
+                continue recurse;
+              }
+              distance -= size;
+            }
+            return [ parent, children.length ];
+          }
+        }
+
         //
         // Resizing text to fill screen
         //
 
-        findPerfectSize(wrap, text);
         window.onresize = function () {
           findPerfectSize(wrap, text);
         };
