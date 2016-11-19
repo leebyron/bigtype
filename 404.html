@@ -150,6 +150,9 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           (window.navigator.standalone ?
             localStorage.getItem('content') || '' :
             decodeURIComponent(window.location.pathname.slice(1).replace(/\+/g, ' ')))
+          .replace(/\n/g, '')
+          .replace(/\u00A0/g, ' ')
+          .replace(/\u2005/g, ' ')
           .trim()
           .slice(0, MAXIMUM_LENGTH);
 
