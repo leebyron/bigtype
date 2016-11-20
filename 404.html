@@ -164,9 +164,21 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           .trim()
           .slice(0, MAXIMUM_LENGTH);
 
+        var style = parseInt(
+          window.navigator.standalone ?
+            localStorage.getItem('style') :
+            window.location.search.slice(1),
+          10) || 0;
+
+        // Set document to current style.
+        wrap.className = 'style' + style;
+
+        // Update View.
+        updateView(content || 'BigType');
+
+        // Update page title.
         if (content) {
           document.title = content;
-          updateView(content);
         }
 
         function updateView(newContent) {
@@ -184,15 +196,6 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
             .join('');
           findPerfectSize(wrap, text);
         }
-
-        var style = parseInt(
-          window.navigator.standalone ?
-            localStorage.getItem('style') :
-            window.location.search.slice(1),
-          10) || 0;
-
-        // Set document to current style.
-        wrap.className = 'style' + style;
 
         // Called when URL / Storage should update.
         function updateURL() {
