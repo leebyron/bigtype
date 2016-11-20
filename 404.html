@@ -520,10 +520,12 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           startX = null;
         };
 
+        var lastTouch;
         document.ontouchstart = function (event) {
           if (startX) {
             return;
           }
+          lastTouch = Date.now();
           swipeTouch = event.touches[0].identifier;
           startX = event.touches[0].clientX;
           queue = [];
@@ -588,6 +590,10 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         document.onmousemove = updateHoverStylePreview;
 
         function updateHoverStylePreview(event) {
+          // Avoid emulated clicks from touches since we're handling touches.
+          if (Date.now() - lastTouch < 150) {
+            return;
+          }
           var direction =
             document.documentElement.offsetWidth * 0.95 < event.clientX ? -1 :
             document.documentElement.offsetWidth * 0.05 > event.clientX ? 1 :
@@ -606,6 +612,10 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         }
 
         document.onclick = function (event) {
+          // Avoid emulated clicks from touches since we're handling touches.
+          if (Date.now() - lastTouch < 150) {
+            return;
+          }
           if (stylePreview) {
             animateStylePreview(swipeSize * swipeDirection, function () {
               style = swipeStyle;
