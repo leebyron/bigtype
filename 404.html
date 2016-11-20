@@ -591,7 +591,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
         function updateHoverStylePreview(event) {
           // Avoid emulated clicks from touches since we're handling touches.
-          if (Date.now() - lastTouch < 150) {
+          if (Date.now() - lastTouch < 850) {
             return;
           }
           var direction =
@@ -613,7 +613,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
 
         document.onclick = function (event) {
           // Avoid emulated clicks from touches since we're handling touches.
-          if (Date.now() - lastTouch < 150) {
+          if (Date.now() - lastTouch < 850) {
             return;
           }
           if (stylePreview) {
