@@ -78,6 +78,14 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
         hyphens: none;
       }
 
+      .stylePreview {
+        z-index: 1;
+        -ms-user-select: none;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
       /* additional styles */
 
       #wrap.style0 {}
@@ -427,7 +435,7 @@ Found a bug? Report it at https://github.com/leebyron/bigtype/issues
           swipeSize = document.documentElement.offsetWidth;
           swipeStyle = (style - swipeDirection + STYLES) % STYLES;
           stylePreview = wrap.cloneNode(true);
-          stylePreview.className = 'style' + swipeStyle;
+          stylePreview.className = 'stylePreview style' + swipeStyle;
           document.body.appendChild(stylePreview);
           findPerfectSize(stylePreview, stylePreview.children[0]);
         }
